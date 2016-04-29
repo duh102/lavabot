@@ -3,7 +3,8 @@ import db
 from discord.ext import commands
 from subprocess import Popen, STDOUT, PIPE
 
-commandRE = re.compile(r'^.quote( (?P<command>[0-9]+|add|search)( (?P<rest>.+))?)?')
+commandRE = re.compile(r'^.quote( (?P<command>[0-9]+|add|search)( (?P<rest>.+))?)?', re.DOTALL)
+cowRE = re.compile(r'^.cowsay (?P<rest>.+)', re.DOTALL)
 wildcardRE = re.compile(r'(?P<pre>^|[^\\])\*')
 quotedRE = re.compile(r'^"(?P<cont>.*)"$')
 
@@ -84,10 +85,15 @@ def search(*srch: str):
       response = ', '.join([str(quote.id) for quote in quotes])
   yield from bot.say(quote_format(response))
 
-@bot.command()
+@bot.command(pass_context=True)
 @asyncio.coroutine
-def cowsay(*inp: str):
-    inputs = ' '.join(inp)
+def cowsay(ctx):
+    message = ctx.message
+    inputs = ''
+    try:
+        inputs = cowRE.match(message.clean_content).group('rest')
+    except:
+        pass
     response = "Error; error running cowsay"
     if len(inputs) > 10:
         proc = Popen(['cowsay', '-n'], stdin=PIPE, stdout=PIPE)
