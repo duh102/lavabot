@@ -44,6 +44,9 @@ def giveSession():
     finally:
         session.commit()
 
+def giveNowUTC():
+    return datetime.now(tzlocal()).astimezone(tzutc())
+
 Base = declarative_base()
 
 class Quote(Base):
@@ -52,7 +55,7 @@ class Quote(Base):
     submitter = Column(String(64), index=True)
     channel = Column(String(64), index=True)
     server = Column(String(64), index=True)
-    submit_timestamp = Column(DateTime, default=datetime.now(tzlocal()).astimezone(tzutc()), index=True, nullable=False)
+    submit_timestamp = Column(DateTime, default=giveNowUTC, index=True, nullable=False)
     quote = Column(String(512), nullable=False)
 
     @classmethod

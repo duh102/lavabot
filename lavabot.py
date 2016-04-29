@@ -1,6 +1,7 @@
 import discord, asyncio, re, random, json
 import db
 from discord.ext import commands
+from subprocess import Popen, STDOUT, PIPE
 
 commandRE = re.compile(r'^.quote( (?P<command>[0-9]+|add|search)( (?P<rest>.+))?)?')
 wildcardRE = re.compile(r'(?P<pre>^|[^\\])\*')
@@ -72,7 +73,8 @@ def add(ctx):
 
 @quote_group.command()
 @asyncio.coroutine
-def search(search: str):
+def search(*srch: str):
+  search = ' '.join(srch)
   if len(search) < 3:
     response = "Error; search string '{}' too short".format(search)
   else:
@@ -81,6 +83,22 @@ def search(search: str):
       quotes = session.query(db.Quote).filter(db.Quote.quote.like(searchHelper(search)))
       response = ', '.join([str(quote.id) for quote in quotes])
   yield from bot.say(quote_format(response))
+
+@bot.command()
+@asyncio.coroutine
+def cowsay(*inp: str):
+    inputs = ' '.join(inp)
+    response = "Error; error running cowsay"
+    if len(inputs) > 10:
+        proc = Popen(['cowsay', '-n'], stdin=PIPE, stdout=PIPE)
+        stdo, stder = proc.communicate(bytes(inputs, 'utf=8'))
+        stdout = str(stdo.decode())
+        if len(stdout) > 0:
+            response = '```{}```'.format(stdout)
+    else:
+        response = "Error; input too short, must be longer than 10 characters"
+    yield from bot.say(response)
+
 
 @bot.event
 @asyncio.coroutine
